@@ -22,11 +22,11 @@ export async function transform(cScript: string) {
         exec(`c2rust transpile /tmp/c2rustcodes/${codeId}.json`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`error: ${error.message}`);
-                return
+                reject(error.message)
             }
             if (stderr) {
                 console.error(`stderr: ${stderr}`);
-                return
+                reject(stderr)
             }
             rustScript = fs.readFileSync(codePath, 'utf-8')
             console.log(`stdout: ${stdout}`);
@@ -51,7 +51,7 @@ export async function transform(cScript: string) {
                     console.log('o文件不存在')
                 }
             })
-            resolve(1)
+            resolve(rustScript)
         })
     })
     return {

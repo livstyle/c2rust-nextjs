@@ -28,6 +28,7 @@ export default function Home() {
                 setRustScript(res.script);
             })
             .catch((err) => {
+                message.error('Failed to transform code: '+ err.message);
                 console.error(err);
             })
             .finally(() => {
