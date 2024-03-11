@@ -30,9 +30,27 @@ export async function transform(cScript: string) {
             }
             rustScript = fs.readFileSync(codePath, 'utf-8')
             console.log(`stdout: ${stdout}`);
-            fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.c`)
-            fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.o`)
-            fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.json`)
+            fs.access(`/tmp/c2rustcodes/${codeId}.c`, (err) => {
+                if (!err) {
+                    fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.c`)
+                } else {
+                    console.log('c文件不存在')
+                }
+            })
+            fs.access(`/tmp/c2rustcodes/${codeId}.json`, (err) => {
+                if (!err) {
+                    fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.json`)
+                } else {
+                    console.log('json文件不存在')
+                }
+            })   
+            fs.access(`/tmp/c2rustcodes/${codeId}.o`, (err) => {
+                if (!err) {
+                    fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.o`)
+                } else {
+                    console.log('o文件不存在')
+                }
+            })
             resolve(1)
         })
     })
