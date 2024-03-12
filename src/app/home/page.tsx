@@ -1,10 +1,16 @@
 'use client'
 
-import { Editor } from "@monaco-editor/react";
+import { Editor, loader } from "@monaco-editor/react";
 import { Button, message } from "antd";
 import { useEffect, useState } from "react";
 
 import { transform } from "./actions";
+
+loader.config({
+    paths: {
+        vs: '/monaco-assets/vs'
+    }
+});
 
 export default function Home() {
     const [cScript, setCScript] = useState<string>([
