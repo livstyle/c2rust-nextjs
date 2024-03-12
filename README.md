@@ -42,3 +42,6 @@ npm run build
 npm run start
 ```
 
+#### 遇到的问题 Next.js 中使用 @monaco-editor/react：解决 CDN 加载资源问题
+解决方案(https://juejin.cn/post/7299487316488896564)
+
