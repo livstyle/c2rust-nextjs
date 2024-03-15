@@ -1,6 +1,7 @@
 'use server'
 import * as fs from 'node:fs';
 import { exec } from "child_process"
+import OpenAI from "openai";
 
 export async function transform(cScript: string, options: string) {
     return await transformMap[options as keyof typeof transformMap](cScript)
@@ -114,4 +115,8 @@ fn main() {
 }    
     `,
   }
+}
+
+function newOpenApi() {
+    const openai = new OpenAI();
 }
