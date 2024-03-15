@@ -12,6 +12,12 @@ const transformMap = {
 }
 
 export async function ZHIPU(cScript: string) {
+
+    const controller = new AbortController();
+    const timeId = setTimeout(() => {
+        controller.abort();
+    }, 200000);
+
     const response = await fetch('http://localhost:9001/transform', {
         method: 'POST',
         headers: {
@@ -20,14 +26,28 @@ export async function ZHIPU(cScript: string) {
         body: JSON.stringify({
             message: 'Convert the C++ code to Rust: ' + cScript,
         }),
+        signal: controller.signal,
     })
+    if (timeId) {
+        clearTimeout(timeId);
+    }
+
+    // console.log('response===>', response)
 
     const data = await response.text()
-    console.log('data===>', data)
+    // console.log('data===>', data)
     // 通过正则表达式提取 ``` ``` 之间的内容, 即rust代码 并将剩下的内容按每行分割
-    const rustScript = data?.match(/{"text":"```rust\n([\s\S]*)```"}/)?.[1]
+    const rustScript = data?.match(/```rust([\s\S]*)```/)
+    console.log('rustScript===>', rustScript)
     return {
-        script: rustScript,
+        script: rustScript?.[0]?.replace('```rust', '').replace('```', '')
+        .replaceAll('\\n', '\n')                                        
+        .replace("\"", '"')
+        .replaceAll("\\n\\n", "\n")
+        .replaceAll("\\nn", "\n")
+        .replaceAll("\\\\n", "\n")
+        .replaceAll("\\\\nn", "\n")
+        .replaceAll("\\", "") || '',
     }
 }
 

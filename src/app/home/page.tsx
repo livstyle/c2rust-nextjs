@@ -101,12 +101,12 @@ export default function Home() {
                     // setRustScript(cScript);
                     setLoading(true);
                 }}
-                >Transform</Button>
+                >开始转换</Button>
             </div> 
             <div style={{ marginLeft: 100 }}>
-                <span style={{ marginRight: 10 }}>使用已有C代码</span>
+                <span style={{ marginRight: 10 }}>已有的转换案例</span>
                 <Select
-                   style={{ width: 200 }}
+                   style={{ width: 240 }}
                    options={[
                         { label: 'C++继承转为Rust基于Trait的组合', value: 'cExtend' },
                         { label: '弱指针', value: 'weakPtr' },
