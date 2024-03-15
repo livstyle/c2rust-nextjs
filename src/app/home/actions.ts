@@ -2,7 +2,40 @@
 import * as fs from 'node:fs';
 import { exec } from "child_process"
 
-export async function transform(cScript: string) {
+export async function transform(cScript: string, options: string) {
+    return await transformMap[options as keyof typeof transformMap](cScript)
+}
+
+const transformMap = {
+    'C2Rust': c2rustRustVersion,
+    'ZHIPU': ZHIPU,
+}
+
+export async function ZHIPU(cScript: string) {
+    const response = await fetch('http://localhost:9001/transform', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            message: 'Convert the C++ code to Rust: ' + cScript,
+        }),
+    })
+
+    const data = await response.text()
+    console.log('data===>', data)
+    // 通过正则表达式提取 ``` ``` 之间的内容, 即rust代码 并将剩下的内容按每行分割
+    const rustScript = data?.match(/{"text":"```rust\n([\s\S]*)```"}/)?.[1]
+    return {
+        script: rustScript,
+    }
+}
+
+export async function ChatGpt35(cScript: string) {
+    
+}
+
+export async function c2rustRustVersion(cScript: string) {
     const { v4 } = require('uuid')
     const codeId = v4().replace(/-/g, '')
     fs.writeFileSync(`/tmp/c2rustcodes/${codeId}.c`, cScript)
@@ -62,4 +95,3 @@ fn main() {
     `,
   }
 }
-
