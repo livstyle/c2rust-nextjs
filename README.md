@@ -23,6 +23,10 @@ bun dev
     source $HOME/.cargo/env
     cargo install c2rust
 ```
+```bash
+    项目也依赖大模型，大模型是另一个web项目(C2RustGLM)，需要先启动大模型项目，然后再启动本项目
+    启动C2RustGLM的项目，参考C2RustGLM的README.md
+```
 2. 启动项目
 ```bash
 npm run dev
