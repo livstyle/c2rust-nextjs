@@ -108,7 +108,7 @@ export default function Home() {
                 <Select
                    style={{ width: 240 }}
                    options={[
-                        { label: 'C++继承转为Rust基于Trait的组合', value: 'cExtend' },
+                        // { label: 'C++继承转为Rust基于Trait的组合', value: 'cExtend' },
                         { label: '弱指针', value: 'weakPtr' },
                         { label: '变参函数', value: 'varParam' },
                         { label: '堆内存安全', value: 'heapSecret' },
