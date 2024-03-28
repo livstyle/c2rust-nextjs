@@ -41,7 +41,7 @@ export async function ZHIPU(cScript: string) {
     const rustScript = data?.match(/(```rust|``` rust)([\s\S]*)```/)?.[0] || data
     console.log('rustScript===>', rustScript)
     return {
-        script: rustScript?.replace('```rust', '').replace('``` rust', '').replace('```', '')
+        script: rustScript?.replace('```rust', '').replace('``` rust', '').replace('``` rust', '').replace('```', '')
         .replaceAll('\\n', '\n')                                        
         .replace("\"", '"')
         .replaceAll("\\n\\n", "\n")
