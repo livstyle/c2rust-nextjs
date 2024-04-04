@@ -144,7 +144,7 @@ export async function c2rustWithProject(cScript: string, options?: {
     const { v4 } = require('uuid')
     const v4s = v4().split('-')
     const dirBase = v4s[0]
-    const codeId = v4s[1] //.replace(/-/g, '')
+    const codeId = v4s[1]
     const projectPath = `/tmp/c2rustcodes/${dirBase}/${codeId}`
     const buildPath = `/tmp/c2rustcodes/${dirBase}/build`
     const language = 'c'
@@ -180,21 +180,6 @@ add_executable(${options?.projectName || codeId} translate.${language})
         })
     })
 
-    // const execTask = await new Promise((resolve, reject) => {
-    //     exec(`cd ${buildPath} && c2rust transpile compile_commands.json`, (error, stdout, stderr) => {
-    //         console.log(`stdout: ${stdout}`);
-    //         if (error) {
-    //             console.error(`error: ${error.message}`);
-    //             reject(error.message)
-    //         }
-    //         if (stderr) {
-    //             console.error(`stderr: ${stderr}`);
-    //             reject(stderr)
-    //         }
-    //         resolve('')
-    //     })
-    // })
-
     let rustScript = ''
     try {
         fs.accessSync(`${projectPath}/translate.rs`)
@@ -202,6 +187,8 @@ add_executable(${options?.projectName || codeId} translate.${language})
     } catch (error) {
         console.error('error===>', error)
         rustScript = (error as any)?.message || ''
+    } finally {
+        fs.rmdirSync(`/tmp/c2rustcodes/${dirBase}`, { recursive: true })
     }
 
     return {
