@@ -8,7 +8,8 @@ export async function transform(cScript: string, options: string) {
 }
 
 const transformMap = {
-    'C2Rust': c2rustRustVersion,
+    // 'C2Rust': c2rustRustVersion,
+    'C2Rust': c2rustWithProject,
     'ZHIPU': ZHIPU,
 }
 
@@ -62,27 +63,35 @@ export async function c2rustRustVersion(cScript: string) {
     fs.writeFileSync(`/tmp/c2rustcodes/${codeId}.c`, cScript)
     const codePath = `/tmp/c2rustcodes/${codeId}.rs`
     // 生成compile_commands.json
+    const temp1 = [
+        {
+          "directory": "/tmp/c2rustcodes",
+          "command": `gcc -c -o /tmp/c2rustcodes/${codeId}.o /tmp/c2rustcodes/${codeId}.c`,
+          "file": `/tmp/c2rustcodes/${codeId}.c`
+        }
+    ]
     const temp = [
         {
           "directory": "/tmp/c2rustcodes",
           "command": `gcc -c -o ${codeId}.o ${codeId}.c`,
-          "file": `/tmp/c2rustcodes/${codeId}.c`
+          "file": `${codeId}.c`
         }
     ]
     fs.writeFileSync(`/tmp/c2rustcodes/${codeId}.json`, JSON.stringify(temp))
+    fs.access(`/tmp/c2rustcodes/${codeId}.json`, (err) => {
+        if (!err) {
+            const json = fs.readFileSync(`/tmp/c2rustcodes/${codeId}.json`, 'utf-8')
+            console.log('json文件存在====>', json)
+            // console.log('json文件存在')
+        } else {
+            console.log('json文件不存在')
+        }
+    })
 
     let rustScript = ''
     await new Promise((resolve, reject) => {
+
         exec(`c2rust transpile /tmp/c2rustcodes/${codeId}.json`, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`error: ${error.message}`);
-                reject(error.message)
-            }
-            if (stderr) {
-                console.error(`stderr: ${stderr}`);
-                reject(stderr)
-            }
-            rustScript = fs.readFileSync(codePath, 'utf-8')
             console.log(`stdout: ${stdout}`);
             fs.access(`/tmp/c2rustcodes/${codeId}.c`, (err) => {
                 if (!err) {
@@ -91,30 +100,114 @@ export async function c2rustRustVersion(cScript: string) {
                     console.log('c文件不存在')
                 }
             })
-            fs.access(`/tmp/c2rustcodes/${codeId}.json`, (err) => {
+            // fs.access(`/tmp/c2rustcodes/${codeId}.json`, (err) => {
+            //     if (!err) {
+            //         fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.json`)
+            //     } else {
+            //         console.log('json文件不存在')
+            //     }
+            // })   
+            fs.access(`/tmp/c2rustcodes/${codeId}.rs`, (err) => {
                 if (!err) {
-                    fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.json`)
+                    rustScript = fs.readFileSync(codePath, 'utf-8')
+                    fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.rs`)
                 } else {
-                    console.log('json文件不存在')
-                }
-            })   
-            fs.access(`/tmp/c2rustcodes/${codeId}.o`, (err) => {
-                if (!err) {
-                    fs.unlinkSync(`/tmp/c2rustcodes/${codeId}.o`)
-                } else {
-                    console.log('o文件不存在')
+                    console.log('rs文件不存在')
                 }
             })
+            if (error) {
+                console.error(`error: ${error.message}`);
+                // reject(error.message)
+                resolve('')
+            }
+            if (stderr) {
+                console.error(`stderr: ${stderr}`);
+                // reject(stderr)
+                resolve('')
+            }
             resolve(rustScript)
         })
     })
     return {
         script: rustScript || `use std::io; 
-fn main() { 
+fn translate() { 
     println!("Hello, world!"); 
 }    
     `,
   }
+}
+
+
+export async function c2rustWithProject(cScript: string, options?: {
+    projectName: string;
+}) {
+    const { v4 } = require('uuid')
+    const v4s = v4().split('-')
+    const dirBase = v4s[0]
+    const codeId = v4s[1] //.replace(/-/g, '')
+    const projectPath = `/tmp/c2rustcodes/${dirBase}/${codeId}`
+    const buildPath = `/tmp/c2rustcodes/${dirBase}/build`
+    const language = 'c'
+    fs.mkdirSync(`/tmp/c2rustcodes/${dirBase}`)
+    fs.mkdirSync(projectPath)
+    fs.mkdirSync(buildPath)
+    fs.writeFileSync(`${projectPath}/translate.${language}`, cScript)
+    const codePath = `${projectPath}/translate.rs`
+    // 创建 CMakeLists.txt文件
+    fs.writeFileSync(`${projectPath}/CMakeLists.txt`, `cmake_minimum_required(VERSION 3.22.1)
+project(${options?.projectName || codeId})
+add_executable(${options?.projectName || codeId} translate.${language})
+    `)
+    // 生成compile_commands.json
+    await new Promise((resolve, reject) => {
+        exec(`
+                cd ${buildPath} 
+                cmake ../${codeId} -DCMAKE_EXPORT_COMPILE_COMMANDS=1 
+                # cmake --build .
+                c2rust transpile compile_commands.json
+            `
+            , (error, stdout, stderr) => {
+            console.log(`stdout: ${stdout}`);
+            if (error) {
+                console.error(`error: ${error.message}`);
+                reject(error.message)
+            }
+            if (stderr) {
+                console.error(`stderr: ${stderr}`);
+                reject(stderr)
+            }
+            resolve('')
+        })
+    })
+
+    // const execTask = await new Promise((resolve, reject) => {
+    //     exec(`cd ${buildPath} && c2rust transpile compile_commands.json`, (error, stdout, stderr) => {
+    //         console.log(`stdout: ${stdout}`);
+    //         if (error) {
+    //             console.error(`error: ${error.message}`);
+    //             reject(error.message)
+    //         }
+    //         if (stderr) {
+    //             console.error(`stderr: ${stderr}`);
+    //             reject(stderr)
+    //         }
+    //         resolve('')
+    //     })
+    // })
+
+    let rustScript = ''
+    try {
+        fs.accessSync(`${projectPath}/translate.rs`)
+        rustScript = fs.readFileSync(`${projectPath}/translate.rs`, 'utf-8')
+    } catch (error) {
+        console.error('error===>', error)
+        rustScript = (error as any)?.message || ''
+    }
+
+    return {
+        script: rustScript || ''
+    }
+
 }
 
 function newOpenApi() {

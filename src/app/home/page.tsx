@@ -30,7 +30,8 @@ export default function Home() {
         if (loading) {
             setRustScript('');
             const hide = message.loading('转换中......', 0);
-            transform(cScript, 'ZHIPU')
+            // transform(cScript, 'ZHIPU')
+            transform(cScript, 'C2Rust')
             .then((res) => {
                 setRustScript(res.script || '// 转换失败......');
             })
